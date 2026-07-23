@@ -1,9 +1,14 @@
 import torch
+import argparse
 from pathlib import Path
 from src.datasets.mvtec import MVTecDataset
 from src.models.ae import AutoEncoder
 from torch.utils.data import DataLoader
 from src.evaluation import metrics
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--category', type=str, default='bottle')
+args = parser.parse_args()
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 root = Path(__file__).parent.parent / 'data' / 'mvtec'
