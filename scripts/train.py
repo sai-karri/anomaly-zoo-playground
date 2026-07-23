@@ -46,3 +46,7 @@ for epoch in range(epochs):
         f"Epoch {epoch + 1}/{epochs}, "
         f"Loss: {average_loss:.6f}"
     )
+
+torch.save(model.state_dict(), Path(__file__).parent.parent / 'checkpoints' / 'ae_bottle.pt')
+
+

@@ -101,33 +101,33 @@ class MVTecDataset(Dataset):
 
 
 # if __name__ == '__main__':
-#
-#     root = Path.cwd().parent.parent / 'data' / 'mvtec'
-#
-#     # dataset = MVTecDataset(
-#     #     root=root,
-#     #     category="bottle",
-#     #     split="train"
-#     # )
-#     # print(f"Total images: {len(dataset)}")
-#     #
-#     # sample = dataset[0]
-#     # print(f"Image shape: {sample['image'].shape}")
-#     # print(f"Mask shape: {sample['mask_image'].shape}")
-#     # print(f"Label: {sample['label']}")
-#
-#     test_dataset = MVTecDataset(
-#         root=root,
-#         category="bottle",
-#         split="test"
-#     )
-#     print(f"Total images: {len(test_dataset)}")
-#
-#     # grab a defective sample
-#     for i in range(len(test_dataset)):
-#         sample = test_dataset[i]
-#         if sample['label'] == 1:
-#             print(f"Defective sample found")
-#             print(f"Defect type: {sample['defect_type']}")
-#             print(f"Mask sum: {sample['mask_image'].sum()}")
-#             break
+
+    # root = Path.cwd().parent.parent / 'data' / 'mvtec'
+
+    # dataset = MVTecDataset(
+    #     root=root,
+    #     category="bottle",
+    #     split="train"
+    # )
+    # print(f"Total images: {len(dataset)}")
+    #
+    # sample = dataset[0]
+    # print(f"Image shape: {sample['image'].shape}")
+    # print(f"Mask shape: {sample['mask_image'].shape}")
+    # print(f"Label: {sample['label']}")
+
+    # test_dataset = MVTecDataset(
+    #     root=root,
+    #     category="bottle",
+    #     split="test"
+    # )
+    # print(f"Total images: {len(test_dataset)}")
+    #
+    # # grab a defective sample
+    # for i in range(len(test_dataset)):
+    #     sample = test_dataset[i]
+    #     if sample['label'] == 1:
+    #         print(f"Defective sample found")
+    #         print(f"Defect type: {sample['defect_type']}")
+    #         print(f"Mask sum: {sample['mask_image'].sum()}")
+    #         break
