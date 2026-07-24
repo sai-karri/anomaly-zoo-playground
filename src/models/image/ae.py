@@ -78,6 +78,19 @@ class AutoEncoder(nn.Module):
 
         return self.decoder(encode_out)
 
+    def predict(self, image):
+
+            self.eval()
+            with torch.no_grad():
+
+                reconstructed = self(image)
+                diff = reconstructed - image
+                amap = (diff ** 2).sum(dim=1)
+                k = int(0.1 * amap.numel())
+                image_score = amap.flatten().topk(k).values.mean()
+
+            return image_score, amap
+
 
 if __name__ == '__main__':
     model = AutoEncoder(base_channels=32)

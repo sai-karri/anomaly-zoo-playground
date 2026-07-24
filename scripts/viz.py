@@ -48,3 +48,23 @@ def show_heatmap(image, reconstruction, label, save_path=None):
 
     plt.show()
     plt.close(fig)
+
+
+def show_heatmap_patchcore(image, amap, label, save_path=None):
+    image = denormalize(image).detach().cpu().squeeze(0)
+    image = image.permute(1, 2, 0).clamp(0, 1)
+    amap  = amap.detach().cpu()
+
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+    axes[0].imshow(image)
+    axes[0].set_title("Original")
+    axes[1].imshow(image)
+    axes[1].imshow(amap, cmap='hot', alpha=0.5)
+    axes[1].set_title(f"Anomaly overlay — Label: {label.item()}")
+    for ax in axes:
+        ax.axis('off')
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight')
+    plt.show()
+    plt.close(fig)

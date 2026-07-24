@@ -4,18 +4,18 @@ import torch.nn as nn
 from pathlib import Path
 from src.datasets.mvtec import MVTecDataset
 from src.models.image.ae import AutoEncoder
+from src.models.image.patchcore import PatchCore
 from torch.utils.data import DataLoader
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--category', type=str, default='bottle')
+parser.add_argument('--model', type=str, default='AE')
 args = parser.parse_args()
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 root = Path(__file__).parent.parent / 'data' / 'mvtec'
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--category', type=str, default='bottle')
-args = parser.parse_args()
+checkpoint_path = Path(__file__).parent.parent / 'checkpoints' / f"{args.model}_{args.category}.pt"
+memory_bank_path = Path(__file__).parent.parent / 'checkpoints' / f"{args.model}_memory_bank.pt"
 
 dataloader = DataLoader(
     MVTecDataset(root=root, category=args.category, split='train'),
@@ -23,39 +23,50 @@ dataloader = DataLoader(
     shuffle=True
     )
 
-model = AutoEncoder().to(device)
+if args.model == 'AE':
+    model = AutoEncoder().to(device)
 
-criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-epochs = 50
+    epochs = 50
+    for epoch in range(epochs):
+        model.train()
+        epoch_loss = 0.0
 
-for epoch in range(epochs):
-    model.train()
-    epoch_loss = 0.0
+        for batch in dataloader:
+            images = batch['image'].to(device)
 
-    for batch in dataloader:
-        images = batch['image'].to(device)
+            optimizer.zero_grad()
 
-        optimizer.zero_grad()
+            out = model(images)
 
-        out = model(images)
+            loss = criterion(out, images)
 
-        loss = criterion(out, images)
+            loss.backward()
+            optimizer.step()
 
-        loss.backward()
-        optimizer.step()
+            epoch_loss += loss.item()
 
-        epoch_loss += loss.item()
+        average_loss = epoch_loss / len(dataloader)
 
-    average_loss = epoch_loss / len(dataloader)
+        print(
+            f"Epoch {epoch + 1}/{epochs}, "
+            f"Loss: {average_loss:.6f}"
+        )
 
-    print(
-        f"Epoch {epoch + 1}/{epochs}, "
-        f"Loss: {average_loss:.6f}"
-    )
-checkpoint_path = Path(__file__).parent.parent / 'checkpoints' / f"ae_{args.category}.pt"
+    torch.save(model.state_dict(), checkpoint_path)
 
-torch.save(model.state_dict(), checkpoint_path)
+elif args.model == 'PatchCore':
+
+    model = PatchCore().to(device)
+
+    model.fit(dataloader)
+
+    torch.save(model.memory_bank, memory_bank_path)
+
+    torch.save(model.state_dict(), checkpoint_path)
+
+
 
 
