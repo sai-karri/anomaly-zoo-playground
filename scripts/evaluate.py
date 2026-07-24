@@ -2,7 +2,7 @@ import torch
 import argparse
 from pathlib import Path
 from src.datasets.mvtec import MVTecDataset
-from src.models.ae import AutoEncoder
+from src.models.image.ae import AutoEncoder
 from torch.utils.data import DataLoader
 from src.evaluation import metrics
 from viz import show_heatmap
