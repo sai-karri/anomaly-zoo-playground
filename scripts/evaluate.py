@@ -12,14 +12,19 @@ args = parser.parse_args()
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 root = Path(__file__).parent.parent / 'data' / 'mvtec'
-checkpoint = Path(__file__).parent.parent / 'checkpoints' / 'ae_bottle.pt'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--category', type=str, default='bottle')
+args = parser.parse_args()
+
+checkpoint = Path(__file__).parent.parent / 'checkpoints' / f"ae_{args.category}.pt"
 
 model = AutoEncoder().to(device)
 
 model.load_state_dict(torch.load(checkpoint, map_location=device))
 
 test_dataloader = DataLoader(
-    MVTecDataset(root=root, category='bottle', split='test')
+    MVTecDataset(root=root, category=args.category, split='test')
 )
 
 auroc = metrics.evaluation(model, test_dataloader, device)

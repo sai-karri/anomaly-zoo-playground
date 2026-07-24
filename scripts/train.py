@@ -1,5 +1,6 @@
 import argparse
 import torch
+import argparse
 import torch.nn as nn
 from pathlib import Path
 from src.datasets.mvtec import MVTecDataset
@@ -13,8 +14,12 @@ args = parser.parse_args()
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 root = Path(__file__).parent.parent / 'data' / 'mvtec'
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--category', type=str, default='bottle')
+args = parser.parse_args()
+
 dataloader = DataLoader(
-    MVTecDataset(root=root, category='bottle', split='train'),
+    MVTecDataset(root=root, category=args.category, split='train'),
     batch_size=8,
     shuffle=True
     )
@@ -50,7 +55,8 @@ for epoch in range(epochs):
         f"Epoch {epoch + 1}/{epochs}, "
         f"Loss: {average_loss:.6f}"
     )
+checkpoint_path = Path(__file__).parent.parent / 'checkpoints' / f"ae_{args.category}.pt"
 
-torch.save(model.state_dict(), Path(__file__).parent.parent / 'checkpoints' / 'ae_bottle.pt')
+torch.save(model.state_dict(), checkpoint_path)
 
 
