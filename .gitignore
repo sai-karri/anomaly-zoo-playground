@@ -225,3 +225,4 @@ results/
 .DS_Store
 .idea/
 /anomaly_detection_from_scratch.egg-info
+mlflow.db

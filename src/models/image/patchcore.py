@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 
 class PatchCore(nn.Module):
-    def __init__(self, backbone_name='dinov2_vits14', k=9, coreset_ratio=0.1):
+    def __init__(self, backbone_name='dinov2_vits14', k=9, coreset_ratio=0.05):
         super().__init__()
         self.backbone_name = backbone_name
         self.k = k
@@ -30,29 +30,52 @@ class PatchCore(nn.Module):
 
         self.memory_bank = None
 
-    def coreset_sample(self, patches):
+    # def coreset_sample(self, patches):
+    #
+    #     # n_coreset = int(len(patches) * self.coreset_ratio)
+    #     # selected = [torch.randint(0, len(patches), (1,)).item()]
+    #     #
+    #     # pbar = tqdm(total=n_coreset, desc="Coreset sampling")
+    #     # # step 2-4 — greedy loop
+    #     # while len(selected) < n_coreset:
+    #     #     distances = torch.cdist(patches, patches[selected])
+    #     #     min_distances = distances.min(dim = 1).values
+    #     #     next_idx = min_distances.argmax().item()
+    #     #     selected.append(next_idx)
+    #     #     pbar.update(1)
+    #     # pbar.close()
+    #     # return patches[selected]
+    #     n_coreset = int(len(patches) * self.coreset_ratio)
+    #     indices = torch.randperm(len(patches))[:n_coreset]
+    #     return patches[indices]
 
-        # n_coreset = int(len(patches) * self.coreset_ratio)
-        # selected = [torch.randint(0, len(patches), (1,)).item()]
-        #
-        # pbar = tqdm(total=n_coreset, desc="Coreset sampling")
-        # # step 2-4 — greedy loop
-        # while len(selected) < n_coreset:
-        #     distances = torch.cdist(patches, patches[selected])
-        #     min_distances = distances.min(dim = 1).values
-        #     next_idx = min_distances.argmax().item()
-        #     selected.append(next_idx)
-        #     pbar.update(1)
-        # pbar.close()
-        # return patches[selected]
+    def coreset_sample(self, patches):
         n_coreset = int(len(patches) * self.coreset_ratio)
-        indices = torch.randperm(len(patches))[:n_coreset]
-        return patches[indices]
+        selected = [torch.randint(0, len(patches), (1,)).item()]
+
+        # track minimum distances for each patch
+        min_distances = torch.full((len(patches),), float('inf'), device=patches.device)
+
+        for _ in tqdm(range(n_coreset - 1), desc="Coreset sampling"):
+            # only update distances to the LAST selected patch
+            # not ALL selected patches — this is the key optimisation
+            last = patches[selected[-1]].unsqueeze(0)  # (1, D)
+            new_distances = torch.cdist(patches, last).squeeze(1)  # (N,)
+
+            # update minimum distances
+            min_distances = torch.minimum(min_distances, new_distances)
+
+            # pick patch furthest from any selected patch
+            next_idx = min_distances.argmax().item()
+            selected.append(next_idx)
+
+        return patches[selected]
 
 
     def fit(self, trainloader):
 
-        device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+        self.backbone.eval()
+        device = next(self.backbone.parameters()).device
         all_patches = []
 
         for batch in tqdm(trainloader, desc = "Extracting Features"):
@@ -87,7 +110,8 @@ class PatchCore(nn.Module):
 
     def predict(self, image):
 
-        device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+        self.backbone.eval()
+        device =  next(self.backbone.parameters()).device
 
         self.backbone(image.to(device))
 
@@ -130,10 +154,10 @@ class PatchCore(nn.Module):
         return image_score, amap
 
 
-def save(self, path):
-    torch.save(self.memory_bank, path)
+    def save(self, path):
+        torch.save(self.memory_bank, path)
 
 
-def load(self, path, device):
-    self.memory_bank = torch.load(path, map_location=device)
+    def load(self, path, device):
+        self.memory_bank = torch.load(path, map_location=device)
 
